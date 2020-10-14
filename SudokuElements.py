@@ -79,7 +79,7 @@ class Grid:
 
         # Get rows and columns where the 3x3 grid lies
         rows = range((cell.row // 3) * 3, (cell.row // 3 + 1) * 3)
-        cols = range((cell.col // 3) * 3, (cell.col // 3 + 1) * 3)
+        cols = range((cell.column // 3) * 3, (cell.column // 3 + 1) * 3)
 
         for r in rows:
             for c in cols:
@@ -93,10 +93,13 @@ class Grid:
         Returns a list of the cells that share a row or column with the pass cell, excluding the passed cell
         '''
         cells = []
-        for r in list(range(0, 9)).remove(cell.row):
+        for r in [x for x in range(0, 9) if x != cell.row]:
             cells.append(self.grid[r][cell.column])
-        for c in list(range(0, 9)).remove(cell.column):
+        for c in [x for x in range(0, 9) if x != cell.column]:
             cells.append(self.grid[cell.row][c])
 
         return cells
 
+g = Grid("SampleGrids/Grid01.txt")
+for c in g.Get_Cross(g.grid[0][2]):
+    print(c.value)
