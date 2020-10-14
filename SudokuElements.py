@@ -2,6 +2,8 @@
 # Author:   Blake Freer
 # Date:     October 13, 2020
 
+from string import ascii_uppercase
+
 class Cell:
     '''
     Holds data about one cell
@@ -32,6 +34,9 @@ class Cell:
             True if the cell becomes solved
             False if the cell is still not solved, or there is an error
         '''
+        if num not in self._possible_values:
+            return False
+
         self._possible_values.discard(num)
 
         if len(self._possible_values) == 1:
@@ -40,12 +45,16 @@ class Cell:
             return True
 
         if len(self._possible_values) == 0:
-            print("Error in solving, no possible value for this cell")
+            raise ValueError("Error in solving, no possible value for this cell")
 
         return False
 
     def __str__(self):
-        return str(self.value)
+        return "{r}{c}: {val}".format(
+            r = ascii_uppercase[self.row],
+            c = self.column+1,
+            val = str(self.value) if self.value else str(self._possible_values)
+            )
 
 class Grid:
     '''
@@ -61,6 +70,8 @@ class Grid:
         '''
         self.grid = []
 
+        self.unsolved_cells = 0
+
         file_ = open(file_path, "r")
         for row_num, line in enumerate(file_):
             # Read line of file into individual integers
@@ -68,9 +79,29 @@ class Grid:
             row = []
             for col_num, v in enumerate(values):
                 # Create a cell for each value
+                self.unsolved_cells += 1 if v == 0 else 0
                 row.append(Cell(row_num, col_num, None if v==0 else v))
             self.grid.append(row)
-    
+        
+    def Get_Peers(self, cell: Cell):
+        '''
+        Returns a list of the 20 cells that are peers to the passed cell.
+
+        To be used in place of Get_3x3 and Get_Cross
+        '''
+        peers = []
+        # Get elements in same row and column
+        peers += [self.grid[cell.row][c] for c in range(9) if c != cell.column]
+        peers += [self.grid[r][cell.column] for r in range(9) if r != cell.row]
+
+        # Get peers in same 3x3 but not in same row or column
+        box_rows = [r for r in range((cell.row // 3) * 3, (cell.row // 3 + 1) * 3) if r != cell.row]
+        box_cols = [c for c in range((cell.column // 3) * 3, (cell.column // 3 + 1) * 3) if c != cell.column]
+
+        peers += [self.grid[r][c] for r in box_rows for c in box_cols]
+
+        return peers
+
     def Get_3x3(self, cell: Cell):
         '''
         Returns a list of the cells in the 3x3 sub-grid that the passed cell is a part of, excluding the passed cell
@@ -100,6 +131,32 @@ class Grid:
 
         return cells
 
-g = Grid("SampleGrids/Grid01.txt")
-for c in g.Get_Cross(g.grid[0][2]):
-    print(c.value)
+    def Get_All(self):
+        '''
+        Returns a 1-dimensional list of all the cells in the grid, row by row
+        '''
+        cells = []
+        for r in self.grid:
+            for c in r:
+                cells.append(c)
+
+        return cells
+
+    def __str__(self):
+        '''
+        Returns a nicely formatted representation of the grid cells
+        '''
+
+        output = ""
+
+        for r in range(0, 9):
+            for c in range(0, 9):
+                val = self.grid[r][c].value
+                output += "." if val is None else str(val)
+                if c in [2,5]:
+                    output += " | "
+            output += "\n"
+            if r in [2,5]:
+                output += "----+-----+----\n"
+        
+        return output
