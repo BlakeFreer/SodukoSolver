@@ -96,3 +96,23 @@ class Grid:
                 output += "----+-----+----\n"
         
         return output
+
+    def toString(self, fancy=False):
+        '''
+        Return the grid, formatted with the digits
+        '''
+        if fancy:
+            # If fancy, return with the gridlines
+            return str(self)
+        
+        # Otherwise, return as a plain 9x9 grid of digits
+        output = ""
+        for r in range(0,9):
+            for cell in self.grid[r]:
+                output += str(cell.value if cell.value else 0)
+            if r != 8:
+                output += "\n"
+        
+        return output
+
+

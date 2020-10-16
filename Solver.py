@@ -2,7 +2,7 @@
 
 # Solves a Sudoku grid
 # Author:   Blake Freer
-# Date:     October 14, 2020
+# Date:     October 15, 2020
 
 import Grid
 import Cell
@@ -10,7 +10,7 @@ import argparse
 
 solves = []
 
-def SolveRecursive(grid: Grid, log: bool):
+def SolveRecursive(grid: Grid, log):
     global solves
     '''
     Iterate through each cell in the grid, and solve recursively from there if the cell is solved.
@@ -27,12 +27,12 @@ def SolveRecursive(grid: Grid, log: bool):
     for c in grid.Get_All():
         if not c.value:
             if c.Solve_By_Peers(grid):
-                if log:
-                    solves.append("\n"+str(c)+" by peer digit option comparisons\n"+str(grid))
+                if log[0]:
+                    solves.append("\n"+str(c)+" by peer digit option comparisons\n"+grid.toString(log[1]))
                 SolveFromCell(grid, c, log)
 
     
-def SolveFromCell(grid: Grid, cell: Cell, log: bool):
+def SolveFromCell(grid: Grid, cell: Cell, log):
     global solves
     '''
     Use the value of a solved cell to remove options from a peer cell.
@@ -41,36 +41,67 @@ def SolveFromCell(grid: Grid, cell: Cell, log: bool):
     '''
     for c in grid.Get_Peers(cell):
         if c.Remove_Option(cell.value):
-            if log:
-                solves.append("\n"+str(c)+" by digit elimination\n"+str(grid))
+            if log[0]:
+                solves.append("\n"+str(c)+" by digit elimination\n"+grid.toString(log[1]))
             SolveFromCell(grid, c, log)
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Solve a Sudoku puzzle")
+    parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter, description=
+    """
+    Solve a Sudoku puzzle
+
+    Input:
+        File should be a 9x9 grid of numbers.
+        Empty cells should be represented by a 0 (zero).
+        Do not separate digits with spaces, commas, etc.
+
+    Output:
+        Displays the solved grid.
+        Grid is formatted in the same way as the input file, unless the --fancy flag is used
+
+    Solving Method:
+        The algorithm makes 2 passes through the whole board.
+
+        On the first pass, solved cells are used to update unsolved cells by removing their
+        value as a possible digit in their peers. If 8 digits are eliminated from an unsolved
+        cell, that cell becomes solved and it updates its peers in a recursive fashion.
+
+        On the second pass, unsolved cells are checked against their row, column, and 3x3 sub-
+        grid. If there is a digit that can only be placed in the current cell (i.e. it has been
+        eliminated from all the other cells in the row/column/3x3) then the cell is solved with
+        that digit. This newly solved cell then recursively updates the possible digits of its
+        peers using the same method as the first pass.
+    """
+    )
     parser.add_argument(
         'file',
-        help='Path to unsolved grid file'
+        help='path to unsolved grid file'
     )
     parser.add_argument(
         '--verbose',
         action='store_true',
-        help='Display step by step solution to the puzzle'
+        help='display step by step solution to the puzzle'
+    )
+    parser.add_argument(
+        '--fancy',
+        action='store_true',
+        help='display the solved grid with grid lines and spacing'
     )
     
     args = parser.parse_args()
     g = Grid.Grid(args.file)
 
     if args.verbose:
-        print("INITIAL\n"+str(g))
+        print("INITIAL\n"+g.toString(args.fancy))
 
-    SolveRecursive(g, args.verbose)
+    SolveRecursive(g, (args.verbose, args.fancy))
 
     if args.verbose:
         print("\n".join(solves))
         print("\nFINAL")
 
-    print(g)
+    print(g.toString(args.fancy))
 
 if __name__ ==  "__main__":
     main()
