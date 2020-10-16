@@ -64,7 +64,7 @@ class Grid:
         '''
         Get the other 8 cells in the same column
         '''
-        return [x for x in self.grid[r][cell.column] for r in range(9) if x is not cell]
+        return [self.grid[r][cell.column] for r in range(9) if not cell]
 
     def Get_All(self):
         '''
