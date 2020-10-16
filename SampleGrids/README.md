@@ -1,2 +1,2 @@
 # Sample Problems
-Obtained from github.com/dimitri/sudoku/blob/master/sudoku.txt
+Obtained from https://github.com/dimitri/sudoku
