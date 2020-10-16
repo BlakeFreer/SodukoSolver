@@ -19,91 +19,56 @@ class Cell:
         self.row = row
         self.column = column
         self.value = value
-        self._possible_values = set(range(1, 9+1))   # All values that the cell can hold
+        self.possible_values = set(range(1, 9+1))   # All values that the cell can hold
 
         if self.value:
             self._possible_values = set([self.value])
 
-    def TrySolveCell(self):
+    def Remove_Option(self, digit):
         '''
-        If the cell only has one possible value, set the cell to that value
+        Remove a digit from the set of possible digits. Return True if the cell becomes solved, False otherwise
         '''
-        if len(self._possible_values) == 1:
-            self.value = list(self._possible_values)[0]
-            return True
-        return False
-
-    def Update_Cell(self, grid: Grid):
-        '''
-        Check the cells in the same 3x3, row and column. If there is a digit that can only be placed in this cell, solve the cell.
-        '''
-        if self.value:
-            # Do nothing if already solved
+        
+        if digit not in self.possible_values or self.value:
+            # If the digit was already eliminated, do nothing
             return False
         
-        if self.TrySolveCell():
-            #print("solved {} by clue".format(str(self)))
+        self.possible_values.remove(digit)
+
+        if len(self.possible_values) == 1:
+            # The cell becomes solved if there is only one remaining option
+            self.value = self.possible_values.pop()
+            self.possible_values = set([self.value])
             return True
-
-        # sets_to_check = [grid.Get_3x3(self), grid.Get_Row(self), grid.Get_Column(self)]
-        # for s in sets_to_check:
-        #     only_here = self._possible_values - set().union(*[x._possible_values for x in s])
-        #     if len(only_here) == 1:
-        #         #print("solved {} by peer".format(str(self)))
-        #         self._possible_values = only_here
-        #         return self.TrySolveCell()
-
-        return False
-
-    def Check_Peers(self, grid):
-        cell_sets_to_check = [grid.Get_3x3(self), grid.Get_Row(self), grid.Get_Column(self)]
-        for _set in cell_sets_to_check:
-            only_here = self._possible_values - set().union(*[x._possible_values for x in _set])
-            if len(only_here) == 1:
-                self._possible_values = only_here
-                self.value = list(self._possible_values)[0]
-
-
-    def Update(self, grid: Grid, digitToRemove):
-        '''
-        Use a value in a peer cell to update this cell
-        '''
-        print("Updating {}".format(self))
-        if digitToRemove not in self._possible_values:
-            return False
-        
-        self._possible_values.remove(digitToRemove)
-        
-        if len(self._possible_values) == 1:
-            # If the cell can only have one digit, assign it the the value
-            self.value = list(self._possible_values)[0]
         else:
-            self.Check_Peers(grid)
-
-        for peer in grid.Get_Peers(self):
-            peer.Check_Peers(grid)
-
-        return self.value is not None
-
-    def Eliminate_Option(self, num, grid: Grid):
-        '''
-        Removes a possible value, due to more information becoming available elsewhere.
-
-        Returns:
-            True if the cell becomes solved
-            False if the cell is still not solved, or there is an error
-        '''
-
-        if num not in self._possible_values:
+            # If the digit was removed and other option still exist, return False
             return False
 
-        self._possible_values.remove(num)
+    def Solve_By_Peers(self, grid):
+        '''
+        If this cell is the only cell in its row, column, or 3x3 that can hold a specific value, solve it with that value
+        '''
+        for d in self.possible_values:
+            if d not in set().union(*[x.possible_values for x in grid.Get_Row(self)]):
+                self.value = d
+                self.possible_values = set([d])
+                return True
 
-        return self.Update_Cell(grid)
+            if d not in set().union(*[x.possible_values for x in grid.Get_Column(self)]):
+                self.value = d
+                self.possible_values = set([d])
+                return True
+                
+            if d not in set().union(*[x.possible_values for x in grid.Get_3x3(self)]):
+                self.value = d
+                self.possible_values = set([d])
+                return True
+        
+        return False
 
     def __str__(self):
         return "{r}{c}: {val}".format(
             r = ascii_uppercase[self.row],
             c = self.column+1,
-            val = str(self.value) if self.value else str(self._possible_values)
+            val = str(self.value) if self.value else str(self.possible_values)
         )
