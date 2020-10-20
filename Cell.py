@@ -50,16 +50,19 @@ class Cell:
         If this cell is the only cell in its row, column, or 3x3 that can hold a specific value, solve it with that value
         '''
 
-        for s in [grid.Get_Row(self), grid.Get_Column(self), grid.Get_3x3(self)]:
+        for ind, s in enumerate([grid.Get_Row(self), grid.Get_Column(self), grid.Get_3x3(self)]):
             # Go through row, column and 3x3
+            others = set().union(*[x.possible_values for x in s])
             for d in self.possible_values:
                 # Check if each possible digit in this cell is not in any of the other cells in the row/column/3x3
-                if d not in set().union(*[x.possible_values for x in s]):
+                if d not in others:
+                    print(self)
+                    print(others)
                     self.value = d
                     self.possible_values = set([d])
-                    return True
+                    return True, list(["Row", "Column", "3x3"])[ind]
         
-        return False
+        return False, ""
 
     def __str__(self):
         '''

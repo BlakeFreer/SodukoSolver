@@ -64,7 +64,7 @@ class Grid:
         '''
         Get the other 8 cells in the same column
         '''
-        return [self.grid[r][cell.column] for r in range(9) if not cell]
+        return [self.grid[r][cell.column] for r in range(9) if r != cell.row]
 
     def Get_All(self):
         '''
@@ -87,7 +87,8 @@ class Grid:
         for r in range(0, 9):
             for c in range(0, 9):
                 val = self.grid[r][c].value
-                output += "." if val is None else str(val)
+                output += ("".join(list(map(str, self.grid[r][c].possible_values)))).ljust(10) if val is None else str(val).ljust(10)
+                output += " "
                 if c in [2,5]:
                     output += " | "
             if r != 8:

@@ -23,14 +23,13 @@ def SolveRecursive(grid: Grid, log):
 
     # Stage 2: Check all unsolved cells against their row, column and 3x3. If there is a value
     # that can only be placed in this cell, solve it.
-
     for c in grid.Get_All():
         if not c.value:
-            if c.Solve_By_Peers(grid):
+            sov = c.Solve_By_Peers(grid)
+            if sov[0]:
                 if log[0]:
-                    solves.append("\n"+str(c)+" by peer digit option comparisons\n"+grid.toString(log[1]))
+                    solves.append("\n"+str(c)+" by peer digit option comparisons: {}\n".format(sov[1])+grid.toString(log[1]))
                 SolveFromCell(grid, c, log)
-
     
 def SolveFromCell(grid: Grid, cell: Cell, log):
     global solves
