@@ -22,13 +22,10 @@ def SolveRecursive(grid: Grid):
         if c.value:
             SolveFromCell(grid, c)
     
-    print("\n"*4)
-    print(str(grid))
-
     # Stage 2: Cycle through the rows, columns and boxes to check for cell digit overlaps
     iteration = 0
     while grid.unsolved_cells > 0:
-        for n in range(8):
+        for n in range(9):
             cur_cells = grid.Get_Box(n) if iteration == 0 else grid.Get_Row(n) if iteration == 1 else grid.Get_Col(n)
             for size in range(2, len(cur_cells)):
                 for combo in combinations(cur_cells, size):
@@ -42,9 +39,9 @@ def SolveRecursive(grid: Grid):
                                 SolveFromCell(grid, cell)
         iteration += 1
         iteration %= 3
-        
+
         print("\n"*4)
-        print(str(grid))
+        print(grid.toString(True))
     
 def SolveFromCell(grid: Grid, cell: Cell):
     '''
@@ -56,7 +53,6 @@ def SolveFromCell(grid: Grid, cell: Cell):
         if c.Eliminate_Digits({cell.value}):
             grid.unsolved_cells -= 1
             SolveFromCell(grid, c)
-
 
 def main():
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter, description=
@@ -95,29 +91,39 @@ def main():
         action='store_true',
         help='display step by step solution to the puzzle'
     )
-    parser.add_argument(
-        '--fancy',
-        action='store_true',
-        help='display the solved grid with grid lines and spacing'
-    )
     
     args = parser.parse_args()
     
     with open(args.file, 'r') as file:
-        puzzle = file.read()
+        puzzle_string = file.read()
 
-    g = Grid.Grid(puzzle)
+    # Remove whitespace from string
+    puzzle_string = "".join(puzzle_string.split())
+    # Remove | characters and replace . with 0
+    puzzle_string = puzzle_string.replace("|", "")
+    puzzle_string = puzzle_string.replace("+", "")
+    puzzle_string = puzzle_string.replace("-", "")
+    puzzle_string = puzzle_string.replace(".", "0")
 
-    if args.verbose:
-        print("INITIAL\n"+str(g))
+    def Puzzle(p):
+        g = Grid.Grid(p)
 
-    SolveRecursive(g)
+        if args.verbose:
+            print("INITIAL\n"+g.toString(args.verbose))
 
-    if args.verbose:
-        print("\n".join(solves))
-        print("\nFINAL")
+        SolveRecursive(g)
 
-    print(str(g))
+        if args.verbose:
+            print("\n".join(solves))
+            print("\nFINAL")
+
+        print(g.toString(args.verbose))
+    
+    for i in range(0, len(puzzle_string), 81):
+        if len(puzzle_string) > 81:
+            print("\nPuzzle", i//81)
+        Puzzle(puzzle_string[i:i+81])
 
 if __name__ ==  "__main__":
     main()
+

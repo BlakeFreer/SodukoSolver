@@ -18,13 +18,6 @@ class Grid:
         '''
         self.grid = []
 
-        # Remove whitespace from string
-        puzzle_string = "".join(puzzle_string.split())
-        # Remove | characters and replace . with 0
-        puzzle_string = puzzle_string.replace("|", "")
-        puzzle_string = puzzle_string.replace("+", "")
-        puzzle_string = puzzle_string.replace("-", "")
-        puzzle_string = puzzle_string.replace(".", "0")
 
         if len(puzzle_string) != 81:
             raise InputPuzzleError("Puzzle length is not 81")
@@ -82,14 +75,17 @@ class Grid:
         '''
         return [self.grid[r][col_num] for r in range(9) if not self.grid[r][col_num].value]
 
-    def __str__(self):
+    def toString(self, verbose):
         '''
         Returns a nicely formatted representation of the grid
         '''
         output = ""
         for i, row in enumerate(self.grid):
             for j, c in enumerate(row):
-                output += str(c).ljust(10)
+                if verbose:
+                    output += c.toString(True).ljust(10)
+                else:
+                    output += c.toString(False)
                 if j in [2,5]:
                     output += "|"
             if i != 8:
@@ -98,31 +94,6 @@ class Grid:
                 output += "---+---+---\n"
         
         return output
-
-
-    # OBSELETE
-    def Get_3x3(self, cell: Cell):
-        '''
-        Get the other 8 cells in the same 3x3 grid
-        '''
-        
-        box_rows = [r for r in range((cell.row // 3) * 3, (cell.row // 3 + 1) * 3)]
-        box_cols = [c for c in range((cell.column // 3) * 3, (cell.column // 3 + 1) * 3)]
-
-        cells = [self.grid[r][c] for r in box_rows for c in box_cols if r!=cell.row or c!=cell.column]
-        return cells
-    
-    def Get_Row_Old(self, cell: Cell):
-        '''
-        Get the other 8 cells in the same row
-        '''
-        return [x for x in self.grid[cell.row] if x is not cell]
-
-    def Get_Column(self, cell: Cell):
-        '''
-        Get the other 8 cells in the same column
-        '''
-        return [self.grid[r][cell.column] for r in range(9) if r != cell.row]
 
     def Get_All(self):
         '''

@@ -46,13 +46,10 @@ class Cell:
             # If the digit was removed and other options still exist, return False
             return False
 
-    def __str__(self):
+    def toString(self, verbose):
         '''
         Returns the Cell formatted as its position (ex. A1) and its value / set of possible digits
         '''
-        return "".join(map(str, self.possible_digits))
-        return "{r}{c}: {val}".format(
-            r = ascii_uppercase[self.row],
-            c = self.column+1,
-            val = str(self.value) if self.value else "."
-        )
+        if verbose:
+            return "".join(map(str, self.possible_digits))
+        return str(self.value) if self.value else "0"
