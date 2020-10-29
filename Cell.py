@@ -19,50 +19,32 @@ class Cell:
         self.row = row
         self.column = column
         self.value = value
-        self.possible_values = set(range(1, 9+1))   # All digit that the cell can hold
+        self.possible_digits = set(range(1, 9+1))   # All digit that the cell can hold
 
         if self.value:
             # If the cell is already solved, then change its possible digits to its value 
-            self.possible_values = set([self.value])
+            self.possible_digits = {self.value}
 
-    def Remove_Option(self, digit):
+    def Eliminate_Digits(self, digits: set):
         '''
         Remove a digit from the set of possible digits. Return True if the cell becomes solved, False otherwise
         '''
         
-        if digit not in self.possible_values:
-            # If the digit was already eliminated, do nothing and return that the cell did not become solved
-            return False
-        
-        self.possible_values.remove(digit)
+        difference = self.possible_digits - digits
 
-        if len(self.possible_values) == 1:
+        if self.value or self.possible_digits == difference:
+            # If cell is already solved, or if removing the digits has no effect, the cell doesn't become solved
+            return False
+
+        self.possible_digits = difference
+
+        if len(self.possible_digits) == 1:
             # The cell becomes solved if there is only one remaining possible digit
-            self.value = self.possible_values.pop()
-            self.possible_values = set([self.value])
+            (self.value,) = self.possible_digits
             return True
         else:
             # If the digit was removed and other options still exist, return False
             return False
-
-    def Solve_By_Peers(self, grid):
-        '''
-        If this cell is the only cell in its row, column, or 3x3 that can hold a specific value, solve it with that value
-        '''
-
-        for ind, s in enumerate([grid.Get_Row(self), grid.Get_Column(self), grid.Get_3x3(self)]):
-            # Go through row, column and 3x3
-            others = set().union(*[x.possible_values for x in s])
-            for d in self.possible_values:
-                # Check if each possible digit in this cell is not in any of the other cells in the row/column/3x3
-                if d not in others:
-                    print(self)
-                    print(others)
-                    self.value = d
-                    self.possible_values = set([d])
-                    return True, list(["Row", "Column", "3x3"])[ind]
-        
-        return False, ""
 
     def __str__(self):
         '''
@@ -71,5 +53,5 @@ class Cell:
         return "{r}{c}: {val}".format(
             r = ascii_uppercase[self.row],
             c = self.column+1,
-            val = str(self.value) if self.value else str(self.possible_values)
+            val = str(self.value) if self.value else "."
         )

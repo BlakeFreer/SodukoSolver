@@ -4,26 +4,43 @@
 
 import Cell
 
+class InputPuzzleError(Exception):
+    pass
+
 class Grid:
 
-    def __init__(self, file_path):
+    def __init__(self, puzzle_string):
         '''
         Constructor for a grid
     
         Parameters:
-            file_path: the file location from which the grid will be constructed
+            puzzle_string: the unsolved puzzle data
         '''
         self.grid = []
 
-        file_ = open(file_path, "r")
-        for row_num, line in enumerate(file_):
-            # Read line of file into individual integers
-            values = list(map(int, line.rstrip()))
-            row = []
-            for col_num, v in enumerate(values):
-                # Create a cell for each value
-                row.append(Cell.Cell(row_num, col_num, None if v==0 else v))
-            self.grid.append(row)
+        # Remove whitespace from string
+        puzzle_string = "".join(puzzle_string.split())
+        # Remove | characters and replace . with 0
+        puzzle_string = puzzle_string.replace("|", "")
+        puzzle_string = puzzle_string.replace(".", "0")
+
+        if len(puzzle_string) != 81:
+            raise InputPuzzleError("Puzzle length is not 81")
+        if not puzzle_string.isdigit():
+            raise InputPuzzleError("Puzzle may only contain digits, whitespace, and the \".\" or \"|\" characters")
+
+        # The number of unsolved cells are the cells that are 0 to start
+        self.unsolved_cells = puzzle_string.count("0")
+
+        for i in range(0, 81, 9):
+            # Iterate though the 81 characters, 9 digits at a time
+            row_nums = [int(x) for x in puzzle_string[i:i+9]]
+            new_row = []
+            for c, digit in enumerate(row_nums):
+                # Create 9 new cells with the current row data
+                new_row.append(Cell.Cell(i/9, c, None if digit == 0 else digit))
+            # Add the row to the grid
+            self.grid.append(new_row)
         
     def Get_Peers(self, cell: Cell):
         '''
@@ -42,19 +59,58 @@ class Grid:
 
         return peers
 
+    def Get_Box(self, box_num: int):
+        '''
+        Returns the 9 cells in a 3x3 box. Boxes are numbered 0-8, top to bottom across the rows. ex box 1 = top middle
+        '''
+        box_rows = range((box_num // 3) * 3, (box_num // 3 + 1) * 3)
+        box_cols = range((box_num % 3) * 3, (box_num % 3 + 1) * 3)
+
+        return [self.grid[r][c] for r in box_rows for c in box_cols]
+    
+    def Get_Row(self, row_num: int):
+        '''
+        Returns the 9 cells in a row. Rows numbered 0-8, top -> down
+        '''
+        return self.grid[row_num]
+
+    def Get_Col(self, col_num: int):
+        '''
+        Returns the 9 cells in a column. Columns numbered 0-8, left-> right
+        '''
+        return [self.grid[r][col_num] for r in range(9)]
+
+    def __str__(self):
+        '''
+        Returns a nicely formatted representation of the grid
+        '''
+        output = ""
+        for i, row in enumerate(self.grid):
+            for j, c in enumerate(row):
+                output += str(c)
+                if j in [2,5]:
+                    output += "|"
+            if i != 8:
+                output += "\n"
+            if i in [2,5]:
+                output += "---+---+---\n"
+        
+        return output
+
+
+    # OBSELETE
     def Get_3x3(self, cell: Cell):
         '''
         Get the other 8 cells in the same 3x3 grid
         '''
-        cells = []
         
         box_rows = [r for r in range((cell.row // 3) * 3, (cell.row // 3 + 1) * 3)]
         box_cols = [c for c in range((cell.column // 3) * 3, (cell.column // 3 + 1) * 3)]
 
-        cells += [self.grid[r][c] for r in box_rows for c in box_cols if r!=cell.row or c!=cell.column]
+        cells = [self.grid[r][c] for r in box_rows for c in box_cols if r!=cell.row or c!=cell.column]
         return cells
     
-    def Get_Row(self, cell: Cell):
+    def Get_Row_Old(self, cell: Cell):
         '''
         Get the other 8 cells in the same row
         '''
@@ -76,44 +132,4 @@ class Grid:
                 cells.append(c)
 
         return cells
-
-    def __str__(self):
-        '''
-        Returns a nicely formatted representation of the grid cells
-        '''
-
-        output = ""
-
-        for r in range(0, 9):
-            for c in range(0, 9):
-                val = self.grid[r][c].value
-                output += ("".join(list(map(str, self.grid[r][c].possible_values)))).ljust(10) if val is None else str(val).ljust(10)
-                output += " "
-                if c in [2,5]:
-                    output += " | "
-            if r != 8:
-                output += "\n"
-            if r in [2,5]:
-                output += "----+-----+----\n"
         
-        return output
-
-    def toString(self, fancy=False):
-        '''
-        Return the grid, formatted with the digits
-        '''
-        if fancy:
-            # If fancy, return with the gridlines
-            return str(self)
-        
-        # Otherwise, return as a plain 9x9 grid of digits
-        output = ""
-        for r in range(0,9):
-            for cell in self.grid[r]:
-                output += str(cell.value if cell.value else 0)
-            if r != 8:
-                output += "\n"
-        
-        return output
-
-
