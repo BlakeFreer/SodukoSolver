@@ -7,10 +7,11 @@
 import Grid
 import Cell
 import argparse
+from itertools import cycle, combinations
 
 solves = []
 
-def SolveRecursive(grid: Grid, log):
+def SolveRecursive(grid: Grid):
     global solves
     '''
     Iterate through each cell in the grid, and solve recursively from there if the cell is solved.
@@ -19,30 +20,42 @@ def SolveRecursive(grid: Grid, log):
     # Stage 1: Remove all possible values from unsolved cells based on values of solved peers
     for c in grid.Get_All():
         if c.value:
-            SolveFromCell(grid, c, log)
-
-    # Stage 2: Check all unsolved cells against their row, column and 3x3. If there is a value
-    # that can only be placed in this cell, solve it.
-    for c in grid.Get_All():
-        if not c.value:
-            sov = c.Solve_By_Peers(grid)
-            if sov[0]:
-                if log[0]:
-                    solves.append("\n"+str(c)+" by peer digit option comparisons: {}\n".format(sov[1])+grid.toString(log[1]))
-                SolveFromCell(grid, c, log)
+            SolveFromCell(grid, c)
     
-def SolveFromCell(grid: Grid, cell: Cell, log):
-    global solves
+    print("\n"*4)
+    print(str(grid))
+
+    # Stage 2: Cycle through the rows, columns and boxes to check for cell digit overlaps
+    iteration = 0
+    while grid.unsolved_cells > 0:
+        for n in range(8):
+            cur_cells = grid.Get_Box(n) if iteration == 0 else grid.Get_Row(n) if iteration == 1 else grid.Get_Col(n)
+            for size in range(2, len(cur_cells)):
+                for combo in combinations(cur_cells, size):
+                    union = set.union(*map(set, [x.possible_digits for x in combo]))
+                    if len(union) == size:
+                        print(str(union) + " in",size,{0:"Box",1:"Row",2:"Column"}[iteration], n)
+                        for cell in [x for x in cur_cells if x not in combo]:
+                            print("checking ",cell.row,cell.column)
+                            if cell.Eliminate_Digits(union):
+                                grid.unsolved_cells -= 1
+                                SolveFromCell(grid, cell)
+        iteration += 1
+        iteration %= 3
+        
+        print("\n"*4)
+        print(str(grid))
+    
+def SolveFromCell(grid: Grid, cell: Cell):
     '''
     Use the value of a solved cell to remove options from a peer cell.
 
     If a peer cell becomes solved, recursively solve from there. When no more cells are solved on a current branch, move to the next one in the parent branch.
     '''
     for c in grid.Get_Peers(cell):
-        if c.Remove_Option(cell.value):
-            if log[0]:
-                solves.append("\n"+str(c)+" by digit elimination\n"+grid.toString(log[1]))
-            SolveFromCell(grid, c, log)
+        if c.Eliminate_Digits({cell.value}):
+            grid.unsolved_cells -= 1
+            SolveFromCell(grid, c)
 
 
 def main():
@@ -89,18 +102,22 @@ def main():
     )
     
     args = parser.parse_args()
-    g = Grid.Grid(args.file)
+    
+    with open(args.file, 'r') as file:
+        puzzle = file.read()
+
+    g = Grid.Grid(puzzle)
 
     if args.verbose:
-        print("INITIAL\n"+g.toString(args.fancy))
+        print("INITIAL\n"+str(g))
 
-    SolveRecursive(g, (args.verbose, args.fancy))
+    SolveRecursive(g)
 
     if args.verbose:
         print("\n".join(solves))
         print("\nFINAL")
 
-    print(g.toString(args.fancy))
+    print(str(g))
 
 if __name__ ==  "__main__":
     main()

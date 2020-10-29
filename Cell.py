@@ -1,6 +1,6 @@
 # Holds data about one cell and provides methods for solving the cell
 # Author:   Blake Freer
-# Date:     October 15, 2020 
+# Date:     October 28, 2020 
 
 import Grid
 from string import ascii_uppercase
@@ -50,6 +50,7 @@ class Cell:
         '''
         Returns the Cell formatted as its position (ex. A1) and its value / set of possible digits
         '''
+        return "".join(map(str, self.possible_digits))
         return "{r}{c}: {val}".format(
             r = ascii_uppercase[self.row],
             c = self.column+1,
