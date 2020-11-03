@@ -28,6 +28,9 @@ Cell has a set of "possible digits" - digits that the Cell could potentially hol
 ### Grid
 Grid holds a 9x9 2D array of cells. It provides methods for getting peer cells or finding the cells in a specific row, column or 3x3 box.
 
+### Solver
+Handles command line input and houses the solving method described below.
+
 ## Method of Solving
 1. The puzzle file is read through to create a Grid object that holds the Cells. This array is populated by initializing cells either with a starting value or as empty, wiht a set of possible digits containing each digit 1 through 9.
 2. The solved cells are iterated through. At each solved cell, it removes its value from its peers.
